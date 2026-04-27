@@ -11,20 +11,32 @@ Use this skill to improve clarity, specificity, coherence, and natural academic 
 
 Never rewrite LaTeX commands, citation keys, labels, references, formulas, code, tables, figures, bibliography entries, or package configuration unless the user explicitly asks for technical LaTeX edits.
 
-## Standard Workflow
+## Operating Modes
 
-1. Identify the document type, language, target venue, and requested scope.
-2. If working on `.tex`, run `scripts/latex_segmenter.py extract` on the file or selected chapter to identify editable prose blocks.
-3. Read `references/latex-protection.md` before editing LaTeX-heavy files.
-4. Read `references/revision-prompts.md` when composing or applying revision prompts.
-5. Revise only prose-bearing segments:
+- **Snippet mode**: revise pasted LaTeX or plain academic prose. Use the rules below and return revised text plus a short audit note.
+- **Single-file mode**: revise one `.tex` file. Extract or build a revision packet before editing.
+- **Project mode**: revise a multi-file LaTeX project. Audit the project first, then work by chapter or file.
+- **Validation mode**: compare original and revised files for protected-token drift and report risks.
+
+## Mandatory Workflow
+
+1. Identify document type, language, target venue, and requested scope.
+2. For real `.tex` files, read `references/agent-workflow.md`.
+3. For LaTeX-heavy files, read `references/latex-protection.md`.
+4. For revision wording, read `references/revision-prompts.md` and `references/quality-rubric.md`.
+5. Choose the workflow:
+   - Project: run `scripts/latex_project_audit.py`.
+   - Single file: run `scripts/build_revision_pack.py` or `scripts/latex_segmenter.py extract`.
+   - Approved batch revisions: run `scripts/apply_segment_revisions.py`.
+   - Final check: run `scripts/latex_segmenter.py check`.
+6. Revise only prose-bearing segments:
    - Preserve technical meaning and claim strength.
    - Keep citations and cross-references exactly intact.
    - Keep equations, variables, units, dataset names, method names, and proper nouns stable.
    - Prefer concrete domain wording over generic adjectives.
    - Preserve paragraph count unless restructuring is explicitly requested.
-6. Return either a patch, a table of original/revised passages, or a rewritten LaTeX block, depending on the user's requested output.
-7. For file edits, run `scripts/latex_segmenter.py check original.tex revised.tex` when possible to catch protected-token drift.
+7. Return a patch, revised LaTeX block, or original/revised table according to the user's requested output.
+8. Report checks run and any remaining risks.
 
 ## Revision Strategy
 
@@ -57,16 +69,36 @@ When revising user text, include:
 - The revised text or patch.
 - A concise note about what changed: clarity, specificity, flow, terminology, or tone.
 - Any preserved elements worth mentioning, such as citations and equations.
+- Validation results when files were edited.
 
 Do not claim the result will pass or reduce scores in any detector. Say "this reduces generic AI-like phrasing" if the user asks about AI rate.
 
 ## Tools
 
-Use the segmenter for `.tex` files:
+Use the Python tools in this order when handling files:
 
 ```powershell
-python C:/Users/pqcmm/.codex/skills/latex-academic-revision/scripts/latex_segmenter.py extract path/to/main.tex --json segments.json
-python C:/Users/pqcmm/.codex/skills/latex-academic-revision/scripts/latex_segmenter.py check original.tex revised.tex
+python scripts/latex_project_audit.py .
+python scripts/build_revision_pack.py main.tex --json revision_packet.json --markdown revision_packet.md
+python scripts/apply_segment_revisions.py main.tex revision_packet.json --out main.revised.tex
+python scripts/latex_segmenter.py check main.tex main.revised.tex
 ```
 
-The extractor is conservative: it skips math, comments, code-like environments, and short fragments. If it misses a passage, revise the selected passage manually with the same protection rules.
+Tool roles:
+
+- `latex_project_audit.py`: discover root candidates, labels, refs, cites, duplicate labels, and unresolved refs.
+- `latex_segmenter.py`: extract editable prose segments or compare protected tokens.
+- `build_revision_pack.py`: create JSON/Markdown packets for controlled agent revision.
+- `apply_segment_revisions.py`: apply approved `revised_text` fields back to a `.tex` file with protected-token checks.
+
+The tools are conservative. If they miss a passage, revise the selected passage manually with the same protection rules.
+
+## Stop Conditions
+
+Stop and ask before editing when:
+
+- The requested change alters claims, data, citations, or authorship.
+- Protected tokens drift and the cause is not obvious.
+- The revision packet no longer matches the source file.
+- The user asks for guaranteed detector evasion or score reduction.
+- The project cannot be compiled or validated and the change is broad.

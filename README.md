@@ -40,9 +40,14 @@
 ├── agents/
 │   └── openai.yaml                  # OpenAI/Codex UI 元数据
 ├── references/
+│   ├── agent-workflow.md            # Agent 标准工作流和停止条件
 │   ├── latex-protection.md          # LaTeX 保护规则
+│   ├── quality-rubric.md            # 修订质量评分标准
 │   └── revision-prompts.md          # 学术润色提示词库
 ├── scripts/
+│   ├── apply_segment_revisions.py   # 将 approved revised_text 应用回 tex 文件
+│   ├── build_revision_pack.py       # 生成 JSON/Markdown 修订包
+│   ├── latex_project_audit.py       # 审计项目 labels/refs/cites/includes
 │   └── latex_segmenter.py           # LaTeX 正文抽取与 protected token 检查
 ├── examples/
 │   └── sample.tex                   # 示例 LaTeX 文件
@@ -124,7 +129,88 @@ C:\Users\<你的用户名>\.codex\skills\latex-academic-revision
 检查 revised.tex 是否误改了 citation key、label 或 LaTeX 环境。
 ```
 
-## 推荐工作流
+## Agent 标准工作流
+
+真实项目建议固定使用以下 6 步，不要直接全文盲改。
+
+### 1. 项目审计
+
+```powershell
+python .\scripts\latex_project_audit.py .
+```
+
+输出内容包括：
+
+- TeX 文件数量。
+- 可能的主文件。
+- labels、refs、cite keys 数量。
+- 重复 label。
+- 未解析 ref。
+- `\input{}` / `\include{}` 关系。
+
+保存 JSON：
+
+```powershell
+python .\scripts\latex_project_audit.py . --json audit.json
+```
+
+### 2. 生成修订包
+
+```powershell
+python .\scripts\build_revision_pack.py .\main.tex --json revision_packet.json --markdown revision_packet.md
+```
+
+修订包中每个 segment 都包含：
+
+- 原文位置。
+- 行号。
+- 原始 LaTeX 段落。
+- 空的 `revised_text`。
+- 空的 `revision_note`。
+
+Agent 只应该填写 `revised_text` 和 `revision_note`，不要改 `start`、`end`、`text` 等定位字段。
+
+### 3. 填写修订
+
+示例要求：
+
+```text
+使用 $latex-academic-revision 修改 revision_packet.json：
+1. 只填写 revised_text 和 revision_note。
+2. 不改任何 \cite、\ref、\label、公式和环境。
+3. 不新增文献、数据、实验结论。
+4. 保持语言与原文一致。
+```
+
+### 4. 应用修订
+
+```powershell
+python .\scripts\apply_segment_revisions.py .\main.tex .\revision_packet.json --out .\main.revised.tex
+```
+
+该工具会检查：
+
+- segment 是否还能匹配原文件。
+- 单段 protected token 是否漂移。
+- 全文件 protected token 是否漂移。
+
+### 5. protected token 检查
+
+```powershell
+python .\scripts\latex_segmenter.py check .\main.tex .\main.revised.tex
+```
+
+### 6. 编译或人工检查
+
+如果项目有 `latexmkrc` 或明确构建命令，继续运行：
+
+```bash
+latexmk -pdf main.tex
+```
+
+或项目指定的 `xelatex` / `pdflatex` / `latexmk` 命令。
+
+## 快速工作流
 
 ### 1. 抽取可编辑正文段
 
@@ -226,6 +312,42 @@ This study analyzes how the proposed method behaves under the selected experimen
 这些示例展示的是“减少空泛、增强具体性”，不是承诺规避检测。
 
 ## 脚本说明
+
+### `latex_project_audit.py`
+
+审计项目结构：
+
+```bash
+python scripts/latex_project_audit.py .
+python scripts/latex_project_audit.py . --json audit.json
+python scripts/latex_project_audit.py . --fail-on-unresolved
+```
+
+用于 Agent 开始工作前判断主文件、引用关系和潜在风险。
+
+### `build_revision_pack.py`
+
+生成可审阅的修订包：
+
+```bash
+python scripts/build_revision_pack.py examples/sample.tex --json revision_packet.json --markdown revision_packet.md
+```
+
+JSON 适合机器继续处理，Markdown 适合人工审阅。
+
+### `apply_segment_revisions.py`
+
+把 `revision_packet.json` 中已填写的 `revised_text` 应用回 `.tex`：
+
+```bash
+python scripts/apply_segment_revisions.py examples/sample.tex revision_packet.json --out sample.revised.tex
+```
+
+默认会做单段和全文件 protected token 检查。只有在明确知道自己在做结构性 LaTeX 修改时，才使用：
+
+```bash
+--allow-file-token-drift
+```
 
 ### `extract`
 
@@ -338,12 +460,16 @@ Skill 明确要求保护公式和引用，脚本也能检查一部分 protected 
 - 对 `.bib`、多文件 `\input{}` 项目的安全检查。
 - 更完整的 examples。
 - 与 `latexmk` 的可选集成。
+- 更强的 packet 审阅和批注格式。
 
 提交前建议运行：
 
 ```bash
+python scripts/latex_project_audit.py examples/sample.tex
+python scripts/build_revision_pack.py examples/sample.tex --json revision_packet.json --markdown revision_packet.md
 python scripts/latex_segmenter.py extract examples/sample.tex
 python scripts/latex_segmenter.py check examples/sample.tex examples/sample.tex
+python scripts/apply_segment_revisions.py examples/sample.tex revision_packet.json --out sample.revised.tex
 ```
 
 ## License

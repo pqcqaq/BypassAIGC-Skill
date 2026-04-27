@@ -6,6 +6,10 @@ __pycache__/
 .DS_Store
 Thumbs.db
 segments.json
+revision_packet.json
+revision_packet.md
+audit.json
+*.revised.tex
 *.aux
 *.bbl
 *.bcf
