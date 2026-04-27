@@ -1,0 +1,30 @@
+BypassAIGC Skill: LaTeX Academic Revision
+
+Project inspiration and attribution
+==================================
+
+This project was inspired by the open-source project:
+
+  BypassAIGC / AI 学术写作助手
+  https://github.com/chi111i/BypassAIGC
+
+The original project provides the broader application idea around academic
+writing assistance, paper polishing, staged revision, and writing workflow
+management.
+
+This repository is an independent Codex / OpenAI Agents skill that adapts the
+general idea into a LaTeX-first, auditable agent workflow. It focuses on prompt
+engineering, LaTeX structure protection, revision packets, protected-token
+checks, and safe academic prose revision.
+
+This repository does not include the original project's frontend/backend
+application code, database models, executable packaging logic, or management
+dashboard implementation.
+
+The original BypassAIGC project is licensed separately. At the time this notice
+was written, its repository states CC BY-NC-SA 4.0. Users who copy, adapt, or
+redistribute material from the original project should follow the original
+project's license terms.
+
+This repository's own code and documentation are distributed under the MIT
+License unless otherwise stated.
