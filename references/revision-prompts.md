@@ -27,6 +27,9 @@ Revision objectives:
 - Reduce generic AI-like phrasing by improving specificity and local logic.
 - Replace vague transitions with the real relation between ideas.
 - Use field-appropriate terminology without adding unsupported jargon.
+- Improve paragraph progression when the source is jumpy: make each paragraph's opening and closing connect to nearby context.
+- Split complex sentences so each sentence carries one core idea.
+- Vary sentence rhythm without inserting casual filler.
 - Keep paragraph boundaries and overall meaning stable.
 
 Return only strict JSON:
@@ -55,6 +58,8 @@ Constraints:
 - Keep the original language.
 - Keep paragraph boundaries unless a restructure is requested.
 - Reduce generic AI-like phrasing by making claims more bounded, concrete, and context-aware.
+- If restructuring is requested, organize ideas by natural progression: context, problem, method, evidence, limitation, and implication.
+- Match vocabulary to the intended reader when specified: simplify unexplained terminology for general readers, and keep precise field terms for expert readers.
 - Output only the revised LaTeX passage.
 
 Text:
@@ -72,6 +77,9 @@ Focus:
 - Reduce repetitive patterns such as "首先/其次/最后", "具有重要意义", "本文旨在".
 - Replace broad verbs such as "进行分析", "开展研究", "实现优化" with concrete actions when the source supports it.
 - Use cautious academic wording for unquantified claims, such as "说明", "表明", "在该场景下".
+- Rebuild local paragraph flow when requested: make the first sentence inherit the previous context and the final sentence point to the next idea.
+- Keep one core point per sentence; split long clauses before polishing vocabulary.
+- Alternate concise explanatory sentences with slightly longer evidence sentences to avoid mechanical rhythm.
 - Keep technical terms, dataset names, model names, variables, citations, and formulas unchanged.
 - Prefer restrained academic prose over promotional tone.
 - Keep meaning and claim strength unchanged.
@@ -93,7 +101,9 @@ High-priority issues to fix:
 - Abstract noun stacking: too many "机制、链路、闭环、价值、能力、支撑、沉淀、复用".
 - Unsupported value claims: "降低风险、提升效率、提供保护、具备能力" without a concrete scene.
 - Boilerplate transitions: "基于上述问题、这表明、需要补充说明的是、全文共分为六章".
+- Fixed sequence transitions: dense "首先、其次、最后" patterns that hide the actual logic.
 - Meta thesis self-reference: "毕业设计周期、毕业论文中、论文写作时、本毕业设计" used inside normal thesis prose.
+- Unsupported personalization: "我观察到、对我而言、让我印象最深的是" without a reflective scene or source support.
 - Long overloaded sentences mixing background, method, value, and implementation.
 
 Rewrite rules:
@@ -103,6 +113,10 @@ Rewrite rules:
 - Do not mention "graduation thesis/design", "paper writing", or assignment-cycle context in the revised passage unless the source section explicitly requires that topic.
 - Use concrete anchors already present in the source: commands, modules, APIs, logs, tests, workflows, pages, endpoints, or code files.
 - Prefer "用来识别/先提示/接到具体链路里/把范围缩小/在该原型中" over "提供帮助/具备能力/形成闭环".
+- Improve paragraph-level coherence: remove jumpy transitions, keep each paragraph focused on one local claim, and make adjacent paragraphs hand off naturally.
+- Adjust vocabulary for the declared reader: explain or replace jargon for general readers; retain accurate domain terms for expert readers.
+- Use sentence variation only to improve readability; do not add rhetorical questions to formal academic methods/results sections.
+- Do not add personal feelings, memories, or first-person claims unless the user asks for reflective writing and the source supports it.
 - Keep claim strength unchanged or slightly more cautious.
 
 Output format:
@@ -142,7 +156,7 @@ Judge severity by:
 
 - high: empty value claim, heavy template wording, long overloaded list, or unsupported "降低/提升/提供/形成" claim.
 - high: self-referential thesis context such as "毕业设计周期" or "论文写作时" inside normal prose.
-- medium: mechanical objective sentence, repeated thesis subject, abstract noun density, or boilerplate transition.
+- medium: mechanical objective sentence, repeated thesis subject, abstract noun density, fixed sequence transition, unsupported personalization, or boilerplate transition.
 - low: minor smoothness or rhythm issue.
 
 Text:
@@ -164,6 +178,128 @@ Constraints:
 - Preserve thesis tone.
 
 Output only the revised passage.
+
+## Paragraph Structure And Coherence Prompt
+
+Use this when the user asks to reorganize paragraphs, strengthen logical progression, reduce jumping, or make paragraph openings and endings connect.
+
+Task:
+- Identify the core claim of each paragraph.
+- Reorder sentences only when it improves progression and does not change meaning.
+- Use a clear progression such as background -> problem -> method -> evidence -> limitation -> next step.
+- Make the paragraph opening connect to the previous paragraph when context is provided.
+- Make the paragraph ending either summarize the local point or prepare the next paragraph.
+- Remove repeated setup sentences and keep each paragraph focused on one main idea.
+
+Constraints:
+- Preserve citations, LaTeX commands, labels, equations, figures, tables, and technical terms.
+- Do not invent examples, data, or conclusions.
+- Keep required section structure unless the user explicitly asks for a structural rewrite.
+
+Output:
+- If editing prose directly, output the revised passage.
+- If planning first, output a paragraph map: `paragraph -> core point -> role -> action`.
+
+## Audience And Scenario Style Prompt
+
+Use this when the user specifies a reader group or writing scene.
+
+Reader adaptation:
+- General readers: reduce unexplained jargon, add brief in-text explanations only when supported by the source, and prefer common verbs.
+- Expert readers: keep precise terminology, avoid over-explaining basics, and make assumptions, constraints, and method boundaries explicit.
+- Mixed readers: introduce the term once, then use the field term consistently.
+
+Scenario adaptation:
+- Formal academic writing: concise, accurate, restrained, and evidence-bound.
+- Persuasive writing: make the central claim clearer and choose stronger verbs, but do not exaggerate evidence.
+- Informal or reflective writing: allow a warmer conversational tone only when the user requests it.
+
+Constraints:
+- Do not switch style randomly inside one passage.
+- Do not use casual expressions in methods, results, or formal thesis sections.
+- Do not add personal experience unless it is present in the source or explicitly requested.
+
+## Sentence Rhythm And Complexity Prompt
+
+Use this when the prose is repetitive, overlong, or mechanically patterned.
+
+Instructions:
+- Split complex sentences so one sentence expresses one core idea.
+- Delete redundant modifiers before replacing words.
+- Alternate short summary sentences with longer evidence or explanation sentences.
+- Avoid repeating the same opening structure across adjacent sentences.
+- Use active/passive shifts, clause splitting, and phrase reordering only when they improve flow.
+- Avoid adding rhetorical questions in formal academic sections; use them only in explanatory or public-facing writing when requested.
+
+Output only the revised passage unless the user asks for a diagnosis.
+
+## Precision Expansion Prompt
+
+Use this when a passage contains vague claims and the user asks for richer, more persuasive, or more vivid content.
+
+Instructions:
+- First extract the core claim.
+- Expand only with concrete details already present in the source: data, cases, commands, modules, logs, observations, constraints, or user-provided examples.
+- If a useful detail is missing, mark it as `需要作者补充` instead of inventing it.
+- Replace vague words with concrete nouns and verbs.
+- Fix wording that could be misunderstood.
+
+Academic constraint:
+- Synonym replacement and double-negative phrasing may be used sparingly to reduce repetition, but never at the cost of clarity.
+- Do not use double negatives merely to look formal.
+
+## Quote Paraphrase And Synthesis Prompt
+
+Use this for academic writing when the user asks to reduce direct quotation, improve originality, or synthesize cited material.
+
+Instructions:
+- Preserve citation keys and attribution exactly.
+- Convert direct quotations into indirect quotation, paraphrase, or synthesis only when the meaning remains faithful.
+- Combine related cited ideas by relationship: agreement, contrast, extension, limitation, or method difference.
+- Keep quoted wording only when the exact wording is analytically necessary.
+
+Constraints:
+- Do not remove required citations.
+- Do not imply a cited author made a claim that the source text does not support.
+- Do not fabricate page numbers or bibliographic details.
+
+## Flowchart Conversion Prompt
+
+Use this when the user asks to convert steps, procedures, or logical relationships into a flowchart.
+
+Instructions:
+- Extract actions, decision points, inputs, outputs, and feedback loops from the source.
+- Preserve the original order unless the source clearly implies a dependency.
+- Use concise node labels.
+- Keep prose and diagram consistent: do not add a node that is not supported by the source.
+
+Preferred output:
+
+```mermaid
+flowchart TD
+  A[Input] --> B{Decision}
+  B -->|Yes| C[Action]
+  B -->|No| D[Alternative]
+```
+
+For LaTeX-only projects, provide the Mermaid diagram as an auxiliary artifact unless the user asks for TikZ or another LaTeX-native diagram format.
+
+## Personal Perspective Boundary Prompt
+
+Use this when the user asks to add personal view, emotion, experience, warmth, or less "cold" prose.
+
+Allowed:
+- Reflective essays, project summaries, acknowledgments, learning logs, public-facing posts, and informal reports.
+- First-person observations grounded in source material, such as "我在调试中观察到..." when the debugging experience is actually described.
+- Concrete reflective details supplied by the user.
+
+Avoid:
+- Adding memories, feelings, or personal anecdotes to formal thesis methods/results sections.
+- Phrases like "记得那年冬天" unless the document is narrative and the user supplied that memory.
+- First-person claims that fabricate authorship, experiments, or experience.
+
+Academic alternative:
+- Use restrained authorial judgment: "这里更关键的是...", "该结果说明...", "这一限制也影响了后续联调...".
 
 ## Chinese Rewrite Examples
 

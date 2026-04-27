@@ -17,6 +17,9 @@ Use this rubric to judge revised academic prose.
 - Sentence rhythm: vary length without becoming casual.
 - Terminology: preserve field terms and remove filler.
 - Accountability: make clear what the paper shows, assumes, or leaves open.
+- Paragraph progression: make each paragraph's role clear and reduce abrupt jumps.
+- Audience fit: adjust terminology depth to the declared reader group.
+- Style consistency: match formal, persuasive, explanatory, or reflective tone to the scene.
 
 ## Chinese AI-Like Style Rubric
 
@@ -41,6 +44,19 @@ Revision passes this rubric when:
 - Self-referential assignment context is rewritten as engineering scope, implementation order, testability, or validation boundary.
 - Required thesis structure remains, but bookkeeping sentences are shorter.
 
+## Optional Task Rubric
+
+Use this when the user requests broader rewriting beyond sentence polishing.
+
+- **Paragraph structure**: each paragraph has one core point, a clear role, and a natural handoff to adjacent paragraphs.
+- **Reader adaptation**: general-reader versions explain necessary terms; expert-reader versions keep precise terminology and avoid over-explaining basics.
+- **Complexity control**: complex sentences are split before vocabulary polishing; no sentence carries unrelated claims.
+- **Rhythm**: adjacent sentences do not repeat the same opening or length pattern without reason.
+- **Precision expansion**: added details come from the source or are explicitly marked as needing author input.
+- **Quote synthesis**: direct quotations are paraphrased or summarized without losing attribution or changing the cited claim.
+- **Flowchart conversion**: every node corresponds to a source-supported step, decision, input, or output.
+- **Personal perspective**: first-person or emotional wording appears only in suitable reflective or informal contexts and is grounded in provided material.
+
 ## Avoid
 
 - Detector-score promises.
@@ -48,6 +64,8 @@ Revision passes this rubric when:
 - Added citations or invented details.
 - Overly casual wording in academic sections.
 - Flattening all sentences into the same structure.
+- Adding data, examples, personal memories, or emotional claims not present in the source.
+- Using double negatives or synonym swaps in ways that reduce clarity.
 
 ## Final Checklist
 
@@ -55,5 +73,6 @@ Revision passes this rubric when:
 - All citations and labels remain unchanged.
 - Equations and inline math remain unchanged.
 - Chinese style findings from `chinese_ai_style_lint.py` were addressed or intentionally left.
+- Paragraph, audience, quote, diagram, or personal-perspective requests followed their specific constraints.
 - No Markdown syntax was introduced into `.tex`.
 - The final answer names checks that were run.

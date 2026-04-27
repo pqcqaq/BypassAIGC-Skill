@@ -48,6 +48,7 @@ https://github.com/chi111i/BypassAIGC
 - **学术诚信边界**：不承诺检测结果，不鼓励规避检测，不编造参考文献。
 - **中英文支持**：内置中文、英文、摘要、相关工作、方法章节等提示词模板。
 - **中文 AI 腔诊断**：启发式标记空泛目标句、并列堆叠、抽象名词堆砌和论文套话。
+- **结构与读者适配**：支持段落递进、读者层级、句式节奏、引用综述、流程图转换和个人视角边界提示。
 - **保守正文抽取**：提供 `latex_segmenter.py` 从 `.tex` 中抽取可润色正文段。
 - **受保护 token 检查**：可比较修订前后引用、label、begin/end 等是否漂移。
 - **渐进式上下文**：核心规则在 `SKILL.md`，详细规则放在 `references/`，减少 Agent 上下文负担。
@@ -243,7 +244,9 @@ python .\scripts\chinese_ai_style_lint.py .\revision_packet.json --min-severity 
 - 过长技术清单，如大量 `、`、`以及`、模块名挤在一句里。
 - 没有场景锚点的价值判断，如“降低风险、提升效率、提供保护”。
 - 论文套话，如“基于上述问题、这表明、全文共分为六章”。
+- 固定序列套话，如“首先、其次、最后”密集出现。
 - 正文中的元话语，如“毕业设计周期、毕业论文中、论文写作时”。
+- 无依据个人化表达，如“我观察到、对我而言、让我印象最深的是”。
 
 这些结果是风格启发式检查，不是检测器预测。Agent 应把它当作修订优先级：先处理 high，再处理 medium；如果某个术语必须保留，可以在最终说明中注明。
 
@@ -377,6 +380,13 @@ OK: protected LaTeX command/reference token multiset is unchanged.
 - Chinese Thesis Humanization Prompt
 - Chinese AI-Like Sentence Diagnosis Prompt
 - Compress And Concretize Prompt
+- Paragraph Structure And Coherence Prompt
+- Audience And Scenario Style Prompt
+- Sentence Rhythm And Complexity Prompt
+- Precision Expansion Prompt
+- Quote Paraphrase And Synthesis Prompt
+- Flowchart Conversion Prompt
+- Personal Perspective Boundary Prompt
 - English Academic Prose
 - Abstract Revision
 - Introduction Revision
@@ -396,6 +406,11 @@ OK: protected LaTeX command/reference token multiset is unchanged.
 - 用具体逻辑关系替代空泛连接词。
 - 用研究上下文中的真实约束替代“显著、重要、全面”等泛化表达。
 - 对中文论文，优先缩短“设计/实现/提供/形成 + 抽象名词”的句子，把判断落到命令、模块、日志、接口、测试样例或工作流步骤上。
+- 需要重组时，先提取段落核心观点，再调整递进关系和段首段尾衔接。
+- 根据读者层级调节术语密度：面向大众简化并解释，面向专家保留精确术语和约束。
+- 拆解复杂句，控制单句只表达一个核心意思，并通过长短句交替减少机械重复。
+- 直接引用改写为间接引用或综述时，必须保留引用归属，不得改变原作者观点。
+- 个人视角和情感表达只适合反思、总结、致谢或非正式文本；正式论文方法和结果部分不应虚构经历。
 
 ## 示例
 
@@ -510,7 +525,9 @@ python scripts/chinese_ai_style_lint.py . --min-severity high --fail-on high
 - `closed-loop-cliche`
 - `mechanical-objective`
 - `boilerplate-transition`
+- `fixed-sequence-template`
 - `meta-thesis-self-reference`
+- `unsupported-personalization`
 - `long-overloaded-sentence`
 - `overpacked-list`
 - `abstract-noun-density`

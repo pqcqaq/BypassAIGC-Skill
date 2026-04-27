@@ -172,6 +172,49 @@ Better:
 上层能力也不需要从零做起。模型调用可以接入现有大语言模型接口，向量化和相似检索分别由 Sentence-BERT 与 Faiss 承担，前端则沿用 React、Ant Design 和 Oak 的组合。
 ```
 
+### 9. Paragraph Jumping
+
+Typical signals:
+
+- A paragraph moves from background to value judgment to implementation without a clear handoff.
+- Adjacent paragraphs repeat the same opening, such as "本文", "本课题", "系统", or "此外".
+- A paragraph ending does not prepare the next idea.
+
+Rewrite direction:
+
+- Extract the core point before editing.
+- Keep one local claim per paragraph.
+- Use the final sentence to either close the local point or point to the next paragraph.
+- Do not create a new paragraph structure that changes argument order unless the user requests restructuring.
+
+### 10. Audience And Scene Mismatch
+
+Typical signals:
+
+- Public-facing text is filled with unexplained technical terms.
+- Expert-facing text over-explains basic concepts but hides assumptions or constraints.
+- Formal thesis prose suddenly becomes conversational, persuasive, or emotional without reason.
+
+Rewrite direction:
+
+- For general readers, explain necessary terms with short source-grounded wording.
+- For expert readers, keep the domain term and sharpen conditions, inputs, outputs, or limitations.
+- For formal sections, prefer concise and accurate prose.
+- For reflective or informal sections, allow warmer wording only when the user requests it.
+
+### 11. Unsupported Personalization
+
+Typical signals:
+
+- The passage adds "我观察到", "对我而言", "让我印象最深的是", or memory-like details without source support.
+- Personal experience appears in methods, results, or technical design sections.
+
+Rewrite direction:
+
+- In formal thesis sections, replace unsupported personal language with source-grounded authorial judgment.
+- In reflective writing, keep first-person only when the source or user provides the experience.
+- Never fabricate personal memories, emotions, debugging events, or field observations.
+
 ## Rewrite Rules
 
 Apply these rules in order:
@@ -182,7 +225,9 @@ Apply these rules in order:
 4. If the sentence is too long, split it before changing wording.
 5. Remove filler before adding new words.
 6. Keep a thesis tone: natural and readable, but not internet-casual.
-7. Do not add invented examples, experimental results, citations, or source-code facts.
+7. If paragraph restructuring is requested, map each paragraph to one core point before rewriting.
+8. Adapt vocabulary to the reader only when the target reader is known or requested.
+9. Do not add invented examples, experimental results, citations, personal experiences, or source-code facts.
 
 ## Preferred Chinese Style
 
@@ -196,6 +241,9 @@ Prefer:
 - "用来识别"
 - "接到具体链路里"
 - "可以先提示/拦截/记录"
+- "这里可以分两层看"
+- "实际链路是"
+- "这一段更适合先说明"
 
 Avoid overusing:
 
@@ -207,6 +255,7 @@ Avoid overusing:
 - "持续积累经验"
 - "具有重要意义"
 - "实现结构化解释与建议生成"
+- unsupported "我观察到/对我而言/让我印象最深的是"
 
 ## Output Pattern For Agents
 

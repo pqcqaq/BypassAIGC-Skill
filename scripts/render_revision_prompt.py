@@ -55,12 +55,15 @@ def detect_mode(text: str, requested: str, section_hint: Dict | None = None) -> 
 
 def mode_guidance(mode: str, language: str) -> str:
     if mode == "chinese-humanize":
-        return """- Diagnose Chinese thesis prose before rewriting: empty objective chains, over-neat parallelism, abstract noun stacking, unsupported value claims, boilerplate transitions, repeated "本文/本课题" subjects, and long overloaded sentences.
+        return """- Diagnose Chinese thesis prose before rewriting: empty objective chains, over-neat parallelism, abstract noun stacking, unsupported value claims, fixed "首先/其次/最后" transitions, boilerplate transitions, repeated "本文/本课题" subjects, and long overloaded sentences.
 - Make each sentence shorter, more concrete, and closer to author reasoning while preserving thesis tone.
 - Prefer checkable anchors already present in the source: command names, module names, source-code facts, APIs, logs, test cases, or workflow steps.
 - Replace "提供帮助/提供保护/具备能力/形成闭环/完成集成与重组" with what the prototype actually does.
 - Remove meta thesis self-reference such as "毕业设计周期", "毕业论文中", or "论文写作时" from normal prose; express the point as implementation order, scope control, testability, or validation boundary.
-- Do not add invented examples or make the wording casual."""
+- Improve paragraph handoff when context is available; keep one local claim per paragraph.
+- Match vocabulary to the intended reader if specified: explain jargon for general readers, preserve precise terms for experts.
+- Vary sentence rhythm by splitting overloaded sentences and avoiding repeated openings; do not add rhetorical questions to formal thesis sections.
+- Do not add invented examples, personal memories, unsupported first-person claims, or casual wording."""
     if mode == "chinese":
         return """- Reduce slogan-like parallelism and empty connective chains.
 - Replace broad verbs such as "进行/开展/实现优化" with concrete actions when the source supports it.

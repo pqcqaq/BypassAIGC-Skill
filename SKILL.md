@@ -50,6 +50,8 @@ Revise for human scholarly texture, not detector evasion:
 - Replace vague transitions with the real relationship between ideas.
 - Convert generic claims into bounded, evidence-aware claims.
 - Vary sentence rhythm without adding informal tone.
+- Restructure paragraphs only when requested: extract each paragraph's core point, improve progression, and preserve meaning.
+- Adapt vocabulary to the intended reader when specified, keeping formal academic sections precise and restrained.
 - Retain field terminology, but remove boilerplate phrasing.
 - Add authorial judgment only when supported by the source text.
 - Keep limitations, uncertainty, and method constraints visible.
@@ -57,6 +59,9 @@ Revise for human scholarly texture, not detector evasion:
 - For Chinese graduation-thesis text, shorten mechanical "design/implement/build/provide/form" chains, split overloaded technical lists, and anchor value claims to actual commands, modules, logs, tests, or workflow steps already present in the source.
 - Do not write self-referential assignment context such as "graduation thesis cycle", "in this graduation thesis", or "during paper writing" into normal thesis prose; recast it as implementation order, scope control, testability, or validation boundary.
 - For English text, reduce stacked abstract nouns and repeated "this study aims to" patterns.
+- For quote rewriting, preserve attribution and citation keys while converting direct quotation into faithful paraphrase or synthesis.
+- For flowchart requests, extract only source-supported steps, inputs, outputs, and decision points.
+- Add first-person or emotional texture only in suitable reflective or informal contexts and only when source-grounded.
 
 ## LaTeX Editing Rules
 

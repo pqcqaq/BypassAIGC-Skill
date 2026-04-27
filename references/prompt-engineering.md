@@ -48,6 +48,16 @@ For `chinese-humanize`, also include:
 - A reminder to anchor claims only to facts already present in the source.
 - A reminder to remove self-referential assignment context such as "毕业设计周期" or "论文写作时" from normal thesis prose.
 
+When the user requests structure, audience, scene, quote, or diagram work, include only the relevant optional module from `references/revision-prompts.md`:
+
+- `Paragraph Structure And Coherence Prompt`: paragraph reordering, progression, opening/ending handoff.
+- `Audience And Scenario Style Prompt`: general-reader, expert-reader, formal, persuasive, or informal style.
+- `Sentence Rhythm And Complexity Prompt`: long-sentence splitting, rhythm variation, active/passive or clause restructuring.
+- `Precision Expansion Prompt`: concrete details, data, examples, and ambiguity repair without invention.
+- `Quote Paraphrase And Synthesis Prompt`: direct quote to indirect quote or synthesis while preserving attribution.
+- `Flowchart Conversion Prompt`: steps, procedures, decision points, and process diagrams.
+- `Personal Perspective Boundary Prompt`: first-person or warmer tone only when appropriate and source-grounded.
+
 ## Output Schemas
 
 For packet editing, prefer JSON:
@@ -99,6 +109,9 @@ After drafting a revision, run this mental checklist:
 3. Did the revision inflate certainty or novelty?
 4. Did the revision preserve the original language?
 5. Does the revised paragraph still fit the surrounding section?
+6. If audience/style was requested, is the style consistent across the passage?
+7. If expansion was requested, is every added detail grounded in the source or marked for author input?
+8. If personal perspective was requested, is it appropriate for the section and supported by source material?
 
 If any answer is unsafe, revise again before returning.
 
@@ -111,7 +124,8 @@ For Chinese thesis prose that has already been flagged, use this compact task fr
 保留 LaTeX、引用、术语、事实和结论强度。
 先删减，再把保留下来的判断落到已有命令、模块、日志、接口、测试样例或章节事实上。
 不要在正文里写“符合毕业设计周期”“论文写作时”这类站在论文外说论文的话。
+如需重组段落，先提取每段核心观点，再按上下文递进重排；如需面向不同读者，先确定读者层级再调整术语密度。
 输出：原句、问题、修改后、简短说明。
 ```
 
-Do not ask the model to add deliberate mistakes, casual slang, or unverifiable personal traces.
+Do not ask the model to add deliberate mistakes, casual slang, invented data, unverifiable personal traces, or fake emotional details.
