@@ -23,6 +23,7 @@ Select the most specific mode:
 - `results`: results, experiment, evaluation, 结果, 实验, 评价.
 - `discussion`: discussion, conclusion, 讨论, 结论.
 - `chinese`: Chinese prose outside a clearer section mode.
+- `chinese-humanize`: Chinese thesis prose flagged as template-like, abstract, overloaded, or too mechanically organized.
 - `english`: English prose outside a clearer section mode.
 - `universal`: mixed or uncertain text.
 
@@ -38,6 +39,14 @@ Always include:
 - Explicit instruction not to alter protected tokens.
 - Explicit instruction not to add citations, data, or claims.
 - Output schema.
+
+For `chinese-humanize`, also include:
+
+- Findings from `scripts/chinese_ai_style_lint.py` when available.
+- The suspected pattern: empty objective chain, over-neat parallelism, abstract noun stacking, unsupported value claim, boilerplate transition, detached "本文/本课题" subject, or long overloaded sentence.
+- A reminder to shorten before adding detail.
+- A reminder to anchor claims only to facts already present in the source.
+- A reminder to remove self-referential assignment context such as "毕业设计周期" or "论文写作时" from normal thesis prose.
 
 ## Output Schemas
 
@@ -75,6 +84,7 @@ Use instead:
 - "reduce generic AI-like phrasing"
 - "make claims more bounded and context-aware"
 - "preserve academic integrity and LaTeX structure"
+- "diagnose template-like Chinese thesis prose and make it shorter, more concrete, and source-grounded"
 
 ## Auto-Mode Heuristic
 
@@ -91,3 +101,17 @@ After drafting a revision, run this mental checklist:
 5. Does the revised paragraph still fit the surrounding section?
 
 If any answer is unsafe, revise again before returning.
+
+## Chinese Humanization Prompt Shape
+
+For Chinese thesis prose that has already been flagged, use this compact task frame:
+
+```text
+先诊断再改写。重点查找空泛目标句、并列堆叠、抽象名词过密、价值判断无锚点、论文套话、自我提到毕业论文/写作过程的元话语和过长句。
+保留 LaTeX、引用、术语、事实和结论强度。
+先删减，再把保留下来的判断落到已有命令、模块、日志、接口、测试样例或章节事实上。
+不要在正文里写“符合毕业设计周期”“论文写作时”这类站在论文外说论文的话。
+输出：原句、问题、修改后、简短说明。
+```
+
+Do not ask the model to add deliberate mistakes, casual slang, or unverifiable personal traces.

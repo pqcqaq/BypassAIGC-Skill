@@ -47,6 +47,7 @@ https://github.com/chi111i/BypassAIGC
 - **LaTeX 优先**：默认保护命令、引用、公式、标签、环境结构。
 - **学术诚信边界**：不承诺检测结果，不鼓励规避检测，不编造参考文献。
 - **中英文支持**：内置中文、英文、摘要、相关工作、方法章节等提示词模板。
+- **中文 AI 腔诊断**：启发式标记空泛目标句、并列堆叠、抽象名词堆砌和论文套话。
 - **保守正文抽取**：提供 `latex_segmenter.py` 从 `.tex` 中抽取可润色正文段。
 - **受保护 token 检查**：可比较修订前后引用、label、begin/end 等是否漂移。
 - **渐进式上下文**：核心规则在 `SKILL.md`，详细规则放在 `references/`，减少 Agent 上下文负担。
@@ -60,6 +61,7 @@ https://github.com/chi111i/BypassAIGC
 │   └── openai.yaml                  # OpenAI/Codex UI 元数据
 ├── references/
 │   ├── agent-workflow.md            # Agent 标准工作流和停止条件
+│   ├── chinese-humanization.md      # 中文论文 AI 腔诊断与改写规则
 │   ├── latex-protection.md          # LaTeX 保护规则
 │   ├── prompt-engineering.md        # 提示词工程协议
 │   ├── quality-rubric.md            # 修订质量评分标准
@@ -67,6 +69,7 @@ https://github.com/chi111i/BypassAIGC
 ├── scripts/
 │   ├── apply_segment_revisions.py   # 将 approved revised_text 应用回 tex 文件
 │   ├── build_revision_pack.py       # 生成 JSON/Markdown 修订包
+│   ├── chinese_ai_style_lint.py     # 中文论文模板化/AI 腔启发式检查
 │   ├── lint_revision_packet.py      # 检查 revised_text 安全性
 │   ├── latex_project_audit.py       # 审计项目 labels/refs/cites/includes
 │   ├── latex_segmenter.py           # LaTeX 正文抽取与 protected token 检查
@@ -153,7 +156,7 @@ C:\Users\<你的用户名>\.codex\skills\latex-academic-revision
 
 ## Agent 标准工作流
 
-真实项目建议固定使用以下 8 步，不要直接全文盲改。
+真实项目建议固定使用以下流程，不要直接全文盲改；中文论文场景建议加入第 3.1 步风格诊断。
 
 ### 1. 项目审计
 
@@ -196,6 +199,7 @@ Agent 只应该填写 `revised_text` 和 `revision_note`，不要改 `start`、`
 
 ```powershell
 python .\scripts\render_revision_prompt.py .\revision_packet.json --segment 0 --mode auto
+python .\scripts\render_revision_prompt.py .\revision_packet.json --segment 0 --mode chinese-humanize
 ```
 
 为全部段落生成 prompt 文件：
@@ -208,6 +212,7 @@ python .\scripts\render_revision_prompt.py .\revision_packet.json --out-dir .\re
 
 - `auto`
 - `chinese`
+- `chinese-humanize`
 - `english`
 - `abstract`
 - `introduction`
@@ -216,6 +221,31 @@ python .\scripts\render_revision_prompt.py .\revision_packet.json --out-dir .\re
 - `results`
 - `discussion`
 - `universal`
+
+### 3.1 中文 AI 腔诊断
+
+如果目标是中文毕业论文、课程论文或技术报告，建议先运行：
+
+```powershell
+python .\scripts\chinese_ai_style_lint.py .\main.tex --min-severity medium
+```
+
+也可以扫描修订包：
+
+```powershell
+python .\scripts\chinese_ai_style_lint.py .\revision_packet.json --min-severity medium
+```
+
+输出会标记：
+
+- 空泛目标句，如连续使用“设计、实现、构建、提供、形成”。
+- 抽象名词堆叠，如“机制、链路、体系、平台、方案、闭环、能力”。
+- 过长技术清单，如大量 `、`、`以及`、模块名挤在一句里。
+- 没有场景锚点的价值判断，如“降低风险、提升效率、提供保护”。
+- 论文套话，如“基于上述问题、这表明、全文共分为六章”。
+- 正文中的元话语，如“毕业设计周期、毕业论文中、论文写作时”。
+
+这些结果是风格启发式检查，不是检测器预测。Agent 应把它当作修订优先级：先处理 high，再处理 medium；如果某个术语必须保留，可以在最终说明中注明。
 
 ### 4. 填写修订
 
@@ -344,6 +374,9 @@ OK: protected LaTeX command/reference token multiset is unchanged.
 - Segment JSON Prompt
 - Universal LaTeX Revision Prompt
 - Chinese Academic Prose
+- Chinese Thesis Humanization Prompt
+- Chinese AI-Like Sentence Diagnosis Prompt
+- Compress And Concretize Prompt
 - English Academic Prose
 - Abstract Revision
 - Introduction Revision
@@ -362,6 +395,7 @@ OK: protected LaTeX command/reference token multiset is unchanged.
 - 不夸大创新性。
 - 用具体逻辑关系替代空泛连接词。
 - 用研究上下文中的真实约束替代“显著、重要、全面”等泛化表达。
+- 对中文论文，优先缩短“设计/实现/提供/形成 + 抽象名词”的句子，把判断落到命令、模块、日志、接口、测试样例或工作流步骤上。
 
 ## 示例
 
@@ -390,6 +424,28 @@ This study analyzes how the proposed method behaves under the selected experimen
 ```
 
 这些示例展示的是“减少空泛、增强具体性”，不是承诺规避检测。
+
+中文 AI 腔诊断示例：
+
+```latex
+这种渐进式实现方式符合毕业设计周期，也能降低单点失败风险。
+```
+
+更好的修订方向：
+
+```latex
+按模块分阶段做，可以先把各层分别调通；哪一层出问题，也能先缩小范围，而不是让整套系统一起停住。
+```
+
+```latex
+这表明，本课题并非从零构造全部技术能力，而是在现有技术基础上完成面向业务链的集成与重组。
+```
+
+更好的修订方向：
+
+```latex
+因此，本课题的重点不在于重新发明这些基础能力，而是把它们接到命令拦截、异常诊断和知识复用这条具体链路里。
+```
 
 ## 脚本说明
 
@@ -423,6 +479,7 @@ JSON 适合机器继续处理，Markdown 适合人工审阅。
 python scripts/render_revision_prompt.py revision_packet.json --segment 0 --mode auto
 python scripts/render_revision_prompt.py revision_packet.json --out-dir rendered_prompts
 python scripts/render_revision_prompt.py revision_packet.json --segment 0 --mode methods --output json
+python scripts/render_revision_prompt.py revision_packet.json --segment 0 --mode chinese-humanize
 ```
 
 用途：
@@ -430,6 +487,33 @@ python scripts/render_revision_prompt.py revision_packet.json --segment 0 --mode
 - 给 Agent 单段、强约束的改写提示词。
 - 自动带入 protected tokens。
 - 自动按语言和章节模式切换指令重点。
+
+### `chinese_ai_style_lint.py`
+
+扫描中文论文中容易显得模板化或 AI 腔的句子：
+
+```bash
+python scripts/chinese_ai_style_lint.py examples/sample.tex --min-severity medium
+python scripts/chinese_ai_style_lint.py revision_packet.json --json
+python scripts/chinese_ai_style_lint.py . --min-severity high --fail-on high
+```
+
+用途：
+
+- 在改写前定位高风险句子。
+- 帮 Agent 判断先改哪一类问题。
+- 对修订包中的 `revised_text` 或原始 `text` 再做一次风格复查。
+
+常见规则包括：
+
+- `generic-value-claim`
+- `closed-loop-cliche`
+- `mechanical-objective`
+- `boilerplate-transition`
+- `meta-thesis-self-reference`
+- `long-overloaded-sentence`
+- `overpacked-list`
+- `abstract-noun-density`
 
 ### `lint_revision_packet.py`
 
@@ -577,6 +661,7 @@ Skill 明确要求保护公式和引用，脚本也能检查一部分 protected 
 
 ```bash
 python scripts/latex_project_audit.py examples/sample.tex
+python scripts/chinese_ai_style_lint.py examples/sample.tex --min-severity medium
 python scripts/build_revision_pack.py examples/sample.tex --json revision_packet.json --markdown revision_packet.md
 python scripts/render_revision_prompt.py revision_packet.json --segment 0
 python scripts/lint_revision_packet.py revision_packet.json

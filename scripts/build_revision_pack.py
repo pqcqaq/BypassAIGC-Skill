@@ -53,6 +53,7 @@ def build_packet(tex_path: Path, min_chars: int) -> Dict:
             "Revise only revised_text values.",
             "Keep every protected LaTeX command, citation, reference, label, equation, and environment unchanged.",
             "Do not add claims, citations, data, or detector-score promises.",
+            "For Chinese thesis prose, address template-like, abstract, or overloaded sentences flagged by chinese_ai_style_lint.py.",
             "Leave revised_text empty for segments that should not be changed.",
         ],
         "segments": [

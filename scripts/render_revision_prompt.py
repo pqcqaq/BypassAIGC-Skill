@@ -53,6 +53,31 @@ def detect_mode(text: str, requested: str, section_hint: Dict | None = None) -> 
     return "universal"
 
 
+def mode_guidance(mode: str, language: str) -> str:
+    if mode == "chinese-humanize":
+        return """- Diagnose Chinese thesis prose before rewriting: empty objective chains, over-neat parallelism, abstract noun stacking, unsupported value claims, boilerplate transitions, repeated "本文/本课题" subjects, and long overloaded sentences.
+- Make each sentence shorter, more concrete, and closer to author reasoning while preserving thesis tone.
+- Prefer checkable anchors already present in the source: command names, module names, source-code facts, APIs, logs, test cases, or workflow steps.
+- Replace "提供帮助/提供保护/具备能力/形成闭环/完成集成与重组" with what the prototype actually does.
+- Remove meta thesis self-reference such as "毕业设计周期", "毕业论文中", or "论文写作时" from normal prose; express the point as implementation order, scope control, testability, or validation boundary.
+- Do not add invented examples or make the wording casual."""
+    if mode == "chinese":
+        return """- Reduce slogan-like parallelism and empty connective chains.
+- Replace broad verbs such as "进行/开展/实现优化" with concrete actions when the source supports it.
+- Keep a restrained academic tone."""
+    if mode == "english":
+        return """- Reduce stacked nominalizations and template phrases.
+- Prefer precise verbs and bounded claims.
+- Keep formal academic tone."""
+    if mode in {"abstract", "introduction", "related-work", "methods", "results", "discussion"}:
+        return f"- Follow the `{mode}` section purpose and keep claims bounded by the source text."
+    if language == "Chinese":
+        return "- Keep Chinese academic prose specific, concise, and context-aware."
+    if language == "English":
+        return "- Keep English academic prose specific, concise, and formally readable."
+    return "- Keep the prose specific, concise, and faithful to the source."
+
+
 def bullet_tokens(tokens: Iterable[str]) -> str:
     items = list(tokens)
     if not items:
@@ -110,6 +135,9 @@ Revision objective:
 - Prefer bounded, evidence-aware claims over broad promotional wording.
 - Keep paragraph boundaries and meaning stable.
 
+Mode-specific guidance:
+{mode_guidance(resolved_mode, language)}
+
 Output contract:
 {output_contract}
 
@@ -151,7 +179,19 @@ def main() -> int:
     parser.add_argument(
         "--mode",
         default="auto",
-        choices=["auto", "universal", "chinese", "english", "abstract", "introduction", "related-work", "methods", "results", "discussion"],
+        choices=[
+            "auto",
+            "universal",
+            "chinese",
+            "chinese-humanize",
+            "english",
+            "abstract",
+            "introduction",
+            "related-work",
+            "methods",
+            "results",
+            "discussion",
+        ],
     )
     parser.add_argument("--output", default="json", choices=["json", "latex"])
     parser.add_argument("--out-dir", help="write prompts to a directory")
