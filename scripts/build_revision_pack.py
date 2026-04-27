@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from dataclasses import asdict
 from pathlib import Path
 from typing import Dict, List
@@ -13,11 +14,36 @@ from latex_segmenter import extract_segments, protected_tokens, read_text
 
 
 PACKET_VERSION = "1.0"
+HEADING_RE = re.compile(
+    r"\\(?P<cmd>chapter|section|subsection|subsubsection|paragraph)\*?(?:\[[^\]]*\])?\{(?P<title>[^{}]+)\}"
+)
+
+
+def section_hints(text: str) -> List[Dict]:
+    return [
+        {
+            "start": match.start(),
+            "command": match.group("cmd"),
+            "title": match.group("title"),
+        }
+        for match in HEADING_RE.finditer(text)
+    ]
+
+
+def section_hint_for(headings: List[Dict], offset: int) -> Dict:
+    current = {"command": "", "title": ""}
+    for heading in headings:
+        if heading["start"] <= offset:
+            current = {"command": heading["command"], "title": heading["title"]}
+        else:
+            break
+    return current
 
 
 def build_packet(tex_path: Path, min_chars: int) -> Dict:
     text = read_text(tex_path)
     segments = extract_segments(text, min_chars=min_chars)
+    headings = section_hints(text)
     return {
         "version": PACKET_VERSION,
         "source_file": str(tex_path),
@@ -32,6 +58,7 @@ def build_packet(tex_path: Path, min_chars: int) -> Dict:
         "segments": [
             {
                 **asdict(segment),
+                "section_hint": section_hint_for(headings, segment.start),
                 "revised_text": "",
                 "revision_note": "",
             }

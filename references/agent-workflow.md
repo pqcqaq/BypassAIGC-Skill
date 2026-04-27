@@ -7,7 +7,9 @@ Use this workflow when revising real `.tex` projects.
 - **Inspect**: read project structure, identify main `.tex`, audit labels/refs/cites.
 - **Plan**: define scope, language, chapter order, and output format.
 - **Extract**: create segment JSON or revision packet.
+- **Prompt**: render section-aware prompts from the revision packet.
 - **Revise**: rewrite only prose fields or selected LaTeX blocks.
+- **Lint**: check model output before applying it.
 - **Apply**: apply approved revisions back to `.tex`.
 - **Validate**: check protected tokens and, if available, compile LaTeX.
 - **Report**: summarize what changed and what remains risky.
@@ -26,21 +28,33 @@ python scripts/latex_project_audit.py .
 python scripts/build_revision_pack.py main.tex --json revision_packet.json --markdown revision_packet.md
 ```
 
-3. Revise `revised_text` fields only. Leave a field empty if no change is needed.
+3. Render prompts for the target segments:
 
-4. Apply revisions:
+```bash
+python scripts/render_revision_prompt.py revision_packet.json --segment 0 --mode auto
+```
+
+4. Revise `revised_text` fields only. Leave a field empty if no change is needed.
+
+5. Lint the packet:
+
+```bash
+python scripts/lint_revision_packet.py revision_packet.json
+```
+
+6. Apply revisions:
 
 ```bash
 python scripts/apply_segment_revisions.py main.tex revision_packet.json --out main.revised.tex
 ```
 
-5. Check protected tokens:
+7. Check protected tokens:
 
 ```bash
 python scripts/latex_segmenter.py check main.tex main.revised.tex
 ```
 
-6. Compile with the project's existing command when available.
+8. Compile with the project's existing command when available.
 
 ## Stop Conditions
 

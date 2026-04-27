@@ -23,11 +23,13 @@ Never rewrite LaTeX commands, citation keys, labels, references, formulas, code,
 1. Identify document type, language, target venue, and requested scope.
 2. For real `.tex` files, read `references/agent-workflow.md`.
 3. For LaTeX-heavy files, read `references/latex-protection.md`.
-4. For revision wording, read `references/revision-prompts.md` and `references/quality-rubric.md`.
+4. For revision wording, read `references/prompt-engineering.md`, `references/revision-prompts.md`, and `references/quality-rubric.md`.
 5. Choose the workflow:
    - Project: run `scripts/latex_project_audit.py`.
    - Single file: run `scripts/build_revision_pack.py` or `scripts/latex_segmenter.py extract`.
    - Approved batch revisions: run `scripts/apply_segment_revisions.py`.
+   - Prompt generation from a packet: run `scripts/render_revision_prompt.py`.
+   - Packet safety lint: run `scripts/lint_revision_packet.py`.
    - Final check: run `scripts/latex_segmenter.py check`.
 6. Revise only prose-bearing segments:
    - Preserve technical meaning and claim strength.
@@ -80,6 +82,8 @@ Use the Python tools in this order when handling files:
 ```powershell
 python scripts/latex_project_audit.py .
 python scripts/build_revision_pack.py main.tex --json revision_packet.json --markdown revision_packet.md
+python scripts/render_revision_prompt.py revision_packet.json --segment 0 --mode auto
+python scripts/lint_revision_packet.py revision_packet.json
 python scripts/apply_segment_revisions.py main.tex revision_packet.json --out main.revised.tex
 python scripts/latex_segmenter.py check main.tex main.revised.tex
 ```
@@ -89,6 +93,8 @@ Tool roles:
 - `latex_project_audit.py`: discover root candidates, labels, refs, cites, duplicate labels, and unresolved refs.
 - `latex_segmenter.py`: extract editable prose segments or compare protected tokens.
 - `build_revision_pack.py`: create JSON/Markdown packets for controlled agent revision.
+- `render_revision_prompt.py`: render section-aware prompts for one or all packet segments.
+- `lint_revision_packet.py`: validate filled `revised_text` fields before applying them.
 - `apply_segment_revisions.py`: apply approved `revised_text` fields back to a `.tex` file with protected-token checks.
 
 The tools are conservative. If they miss a passage, revise the selected passage manually with the same protection rules.

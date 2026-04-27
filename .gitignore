@@ -9,6 +9,8 @@ segments.json
 revision_packet.json
 revision_packet.md
 audit.json
+rendered_prompts/
+*.prompt.md
 *.revised.tex
 *.aux
 *.bbl

@@ -42,13 +42,16 @@
 ├── references/
 │   ├── agent-workflow.md            # Agent 标准工作流和停止条件
 │   ├── latex-protection.md          # LaTeX 保护规则
+│   ├── prompt-engineering.md        # 提示词工程协议
 │   ├── quality-rubric.md            # 修订质量评分标准
 │   └── revision-prompts.md          # 学术润色提示词库
 ├── scripts/
 │   ├── apply_segment_revisions.py   # 将 approved revised_text 应用回 tex 文件
 │   ├── build_revision_pack.py       # 生成 JSON/Markdown 修订包
+│   ├── lint_revision_packet.py      # 检查 revised_text 安全性
 │   ├── latex_project_audit.py       # 审计项目 labels/refs/cites/includes
-│   └── latex_segmenter.py           # LaTeX 正文抽取与 protected token 检查
+│   ├── latex_segmenter.py           # LaTeX 正文抽取与 protected token 检查
+│   └── render_revision_prompt.py    # 从 packet 渲染分段提示词
 ├── examples/
 │   └── sample.tex                   # 示例 LaTeX 文件
 ├── README.md
@@ -131,7 +134,7 @@ C:\Users\<你的用户名>\.codex\skills\latex-academic-revision
 
 ## Agent 标准工作流
 
-真实项目建议固定使用以下 6 步，不要直接全文盲改。
+真实项目建议固定使用以下 8 步，不要直接全文盲改。
 
 ### 1. 项目审计
 
@@ -170,7 +173,32 @@ python .\scripts\build_revision_pack.py .\main.tex --json revision_packet.json -
 
 Agent 只应该填写 `revised_text` 和 `revision_note`，不要改 `start`、`end`、`text` 等定位字段。
 
-### 3. 填写修订
+### 3. 渲染段落提示词
+
+```powershell
+python .\scripts\render_revision_prompt.py .\revision_packet.json --segment 0 --mode auto
+```
+
+为全部段落生成 prompt 文件：
+
+```powershell
+python .\scripts\render_revision_prompt.py .\revision_packet.json --out-dir .\rendered_prompts
+```
+
+可选模式：
+
+- `auto`
+- `chinese`
+- `english`
+- `abstract`
+- `introduction`
+- `related-work`
+- `methods`
+- `results`
+- `discussion`
+- `universal`
+
+### 4. 填写修订
 
 示例要求：
 
@@ -182,7 +210,27 @@ Agent 只应该填写 `revised_text` 和 `revision_note`，不要改 `start`、`
 4. 保持语言与原文一致。
 ```
 
-### 4. 应用修订
+### 5. Lint 修订包
+
+```powershell
+python .\scripts\lint_revision_packet.py .\revision_packet.json
+```
+
+严格模式：
+
+```powershell
+python .\scripts\lint_revision_packet.py .\revision_packet.json --strict
+```
+
+该工具会检查：
+
+- 单段 protected token 是否漂移。
+- `revised_text` 是否混入 Markdown 代码围栏。
+- 长度是否异常。
+- 语言是否疑似变化。
+- 是否出现 detector bypass 相关危险表达。
+
+### 6. 应用修订
 
 ```powershell
 python .\scripts\apply_segment_revisions.py .\main.tex .\revision_packet.json --out .\main.revised.tex
@@ -194,13 +242,13 @@ python .\scripts\apply_segment_revisions.py .\main.tex .\revision_packet.json --
 - 单段 protected token 是否漂移。
 - 全文件 protected token 是否漂移。
 
-### 5. protected token 检查
+### 7. protected token 检查
 
 ```powershell
 python .\scripts\latex_segmenter.py check .\main.tex .\main.revised.tex
 ```
 
-### 6. 编译或人工检查
+### 8. 编译或人工检查
 
 如果项目有 `latexmkrc` 或明确构建命令，继续运行：
 
@@ -264,14 +312,27 @@ OK: protected LaTeX command/reference token multiset is unchanged.
 
 ## 提示词策略
 
+提示词工程协议位于 [references/prompt-engineering.md](references/prompt-engineering.md)，核心是五层 prompt stack：
+
+1. Task frame
+2. Safety boundary
+3. LaTeX boundary
+4. Revision objective
+5. Output contract
+
 提示词模板位于 [references/revision-prompts.md](references/revision-prompts.md)，包括：
 
+- Segment JSON Prompt
 - Universal LaTeX Revision Prompt
 - Chinese Academic Prose
 - English Academic Prose
 - Abstract Revision
+- Introduction Revision
 - Related Work Revision
 - Methods Revision
+- Results Revision
+- Discussion Or Conclusion Revision
+- Self-Review Prompt
 - Audit Summary Prompt
 
 核心原则：
@@ -334,6 +395,37 @@ python scripts/build_revision_pack.py examples/sample.tex --json revision_packet
 ```
 
 JSON 适合机器继续处理，Markdown 适合人工审阅。
+
+### `render_revision_prompt.py`
+
+从 revision packet 渲染提示词：
+
+```bash
+python scripts/render_revision_prompt.py revision_packet.json --segment 0 --mode auto
+python scripts/render_revision_prompt.py revision_packet.json --out-dir rendered_prompts
+python scripts/render_revision_prompt.py revision_packet.json --segment 0 --mode methods --output json
+```
+
+用途：
+
+- 给 Agent 单段、强约束的改写提示词。
+- 自动带入 protected tokens。
+- 自动按语言和章节模式切换指令重点。
+
+### `lint_revision_packet.py`
+
+检查已填写的 `revised_text`：
+
+```bash
+python scripts/lint_revision_packet.py revision_packet.json
+python scripts/lint_revision_packet.py revision_packet.json --strict
+```
+
+用途：
+
+- 在应用回 `.tex` 之前发现 token 漂移。
+- 发现异常长度变化或语言变化。
+- 拦截 detector bypass 相关危险表达。
 
 ### `apply_segment_revisions.py`
 
@@ -467,6 +559,8 @@ Skill 明确要求保护公式和引用，脚本也能检查一部分 protected 
 ```bash
 python scripts/latex_project_audit.py examples/sample.tex
 python scripts/build_revision_pack.py examples/sample.tex --json revision_packet.json --markdown revision_packet.md
+python scripts/render_revision_prompt.py revision_packet.json --segment 0
+python scripts/lint_revision_packet.py revision_packet.json
 python scripts/latex_segmenter.py extract examples/sample.tex
 python scripts/latex_segmenter.py check examples/sample.tex examples/sample.tex
 python scripts/apply_segment_revisions.py examples/sample.tex revision_packet.json --out sample.revised.tex

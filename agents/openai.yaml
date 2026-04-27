@@ -1,3 +1,3 @@
 display_name: LaTeX Academic Revision
 short_description: Revise LaTeX academic prose safely
-default_prompt: Use this skill to revise LaTeX academic prose through the audit, packet, revise, apply, and validate workflow while preserving commands, citations, equations, and academic integrity.
+default_prompt: Use this skill to revise LaTeX academic prose through audit, packet creation, prompt rendering, packet linting, apply, and validation while preserving commands, citations, equations, and academic integrity.
