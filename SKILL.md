@@ -18,30 +18,34 @@ Never rewrite LaTeX commands, citation keys, labels, references, formulas, code,
 - **Project mode**: revise a multi-file LaTeX project. Audit the project first, then work by chapter or file.
 - **Validation mode**: compare original and revised files for protected-token drift and report risks.
 - **Chinese style diagnosis mode**: scan Chinese thesis prose for empty objective chains, over-neat parallelism, abstract noun stacking, boilerplate transitions, and long overloaded sentences before rewriting.
+- **Read-only analysis mode**: inspect, diagnose, audit, and report without writing files or generating apply-ready revisions when the user asks for review only.
 
 ## Mandatory Workflow
 
 1. Identify document type, language, target venue, and requested scope.
-2. For real `.tex` files, read `references/agent-workflow.md`.
-3. For LaTeX-heavy files, read `references/latex-protection.md`.
-4. For revision wording, read `references/prompt-engineering.md`, `references/revision-prompts.md`, and `references/quality-rubric.md`.
-5. For Chinese "AI-like", "AI rate", "more human", or graduation-thesis wording tasks, read `references/chinese-humanization.md` and run `scripts/chinese_ai_style_lint.py` on the target text, packet, file, or project before revising when a file is available.
-6. Choose the workflow:
+2. For complex tasks, multi-file projects, broad thesis polishing, or delegated work, read `references/agent-operating-procedure.md`.
+3. For real `.tex` files, read `references/agent-workflow.md`.
+4. For LaTeX-heavy files, read `references/latex-protection.md`.
+5. For revision wording, read `references/prompt-engineering.md`, `references/revision-prompts.md`, and `references/quality-rubric.md`.
+6. For source-grounded academic writing, prompt design, or broad "distill best practices" tasks, read `references/source-digests.md`.
+7. If the task explicitly uses subagents, delegated review, or parallel agents, read `references/subagents-collaboration.md`.
+8. For Chinese "AI-like", "AI rate", "more human", or graduation-thesis wording tasks, read `references/chinese-humanization.md` and run `scripts/chinese_ai_style_lint.py` on the target text, packet, file, or project before revising when a file is available.
+9. Choose the workflow:
    - Project: run `scripts/latex_project_audit.py`.
    - Single file: run `scripts/build_revision_pack.py` or `scripts/latex_segmenter.py extract`.
    - Chinese style diagnosis: run `scripts/chinese_ai_style_lint.py`.
    - Approved batch revisions: run `scripts/apply_segment_revisions.py`.
-   - Prompt generation from a packet: run `scripts/render_revision_prompt.py`; use `--mode chinese-humanize` for Chinese thesis passages that were flagged as template-like.
+   - Prompt generation from a packet: run `scripts/render_revision_prompt.py`; use `--mode chinese-humanize` for Chinese thesis passages that were flagged as template-like, or `--mode source-grounded` when claims must stay tightly tied to supplied evidence.
    - Packet safety lint: run `scripts/lint_revision_packet.py`.
    - Final check: run `scripts/latex_segmenter.py check`.
-7. Revise only prose-bearing segments:
+10. Revise only prose-bearing segments:
    - Preserve technical meaning and claim strength.
    - Keep citations and cross-references exactly intact.
    - Keep equations, variables, units, dataset names, method names, and proper nouns stable.
    - Prefer concrete domain wording over generic adjectives.
    - Preserve paragraph count unless restructuring is explicitly requested.
-8. Return a patch, revised LaTeX block, or original/revised table according to the user's requested output.
-9. Report checks run and any remaining risks.
+11. Return a patch, revised LaTeX block, or original/revised table according to the user's requested output.
+12. Report checks run and any remaining risks.
 
 ## Revision Strategy
 
@@ -62,6 +66,16 @@ Revise for human scholarly texture, not detector evasion:
 - For quote rewriting, preserve attribution and citation keys while converting direct quotation into faithful paraphrase or synthesis.
 - For flowchart requests, extract only source-supported steps, inputs, outputs, and decision points.
 - Add first-person or emotional texture only in suitable reflective or informal contexts and only when source-grounded.
+
+## Source-Grounded Revision Strategy
+
+When the user asks for better paper language, "lower AI rate", or academic prompt distillation, use the source-distilled workflow in `references/source-digests.md`:
+
+- **Intake**: identify document type, section, target reader, supplied evidence, and protected tokens before editing.
+- **Diagnose**: check generic thesis wording, inflated significance, vague attribution without citation, repeated sentence openings, excessive list structure, chatbot artifacts, and hidden Unicode.
+- **Rewrite**: shorten filler first, then add only source-supported specificity. If a needed detail is missing, mark it as `needs_author_input` instead of inventing it.
+- **QA**: verify citations, terminology, claim strength, paragraph role, LaTeX tokens, and absence of Markdown wrappers or hidden Unicode.
+- **Prompt iteration**: when improving prompts, test on a small segment, compare output against the rubric, then add only constraints that address observed failures.
 
 ## LaTeX Editing Rules
 
@@ -122,3 +136,6 @@ Stop and ask before editing when:
 - The revision packet no longer matches the source file.
 - The user asks for guaranteed detector evasion or score reduction.
 - The project cannot be compiled or validated and the change is broad.
+- The user requested read-only analysis but the next step would write files or apply revisions.
+- Subagent outputs conflict on facts, citations, results, authorship, disclosure, or claim strength.
+- A subagent artifact cannot be traced back to the original file, packet segment, or supplied source evidence.

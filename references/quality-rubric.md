@@ -20,6 +20,8 @@ Use this rubric to judge revised academic prose.
 - Paragraph progression: make each paragraph's role clear and reduce abrupt jumps.
 - Audience fit: adjust terminology depth to the declared reader group.
 - Style consistency: match formal, persuasive, explanatory, or reflective tone to the scene.
+- Source grounding: every added detail must come from the passage, supplied materials, or verified citations.
+- Auditability: unresolved evidence gaps should be marked for author review rather than hidden by smoother wording.
 
 ## Chinese AI-Like Style Rubric
 
@@ -35,6 +37,9 @@ Score each dimension as low / medium / high risk:
 - **Concrete evidence**: absence of commands, modules, logs, test cases, pages, APIs, or workflow steps already available in the source.
 - **Sentence load**: one sentence carries background, method, implementation, and value at once.
 - **Author presence**: wording sounds like a summary template rather than an author explaining implementation decisions.
+- **Inflated significance**: claims such as "具有重要意义" or "显著提升" are not scoped to evidence.
+- **Uncited attribution**: "研究表明" or similar phrases appear without visible citation.
+- **Artifacts**: chatbot wrappers, Markdown fences, hidden Unicode, or zero-width characters remain in prose.
 
 Revision passes this rubric when:
 
@@ -43,6 +48,7 @@ Revision passes this rubric when:
 - Value claims are bounded to a scenario or softened when evidence is limited.
 - Self-referential assignment context is rewritten as engineering scope, implementation order, testability, or validation boundary.
 - Required thesis structure remains, but bookkeeping sentences are shorter.
+- Vague attribution is either cited, rewritten, or reported as `uncited_attribution`.
 
 ## Optional Task Rubric
 
@@ -56,6 +62,35 @@ Use this when the user requests broader rewriting beyond sentence polishing.
 - **Quote synthesis**: direct quotations are paraphrased or summarized without losing attribution or changing the cited claim.
 - **Flowchart conversion**: every node corresponds to a source-supported step, decision, input, or output.
 - **Personal perspective**: first-person or emotional wording appears only in suitable reflective or informal contexts and is grounded in provided material.
+- **Narrative QA**: sections keep consistent terminology, voice, hedging, and promises-to-results alignment.
+- **Prompt QA**: prompt changes solve observed output failures and remain testable.
+
+## Workflow And Collaboration Rubric
+
+Use this to judge whether the skill was used correctly, not only whether the final prose reads well.
+
+Pass conditions:
+
+- Correct mode was chosen: snippet, single-file, project, diagnosis, validation, read-only, or subagent workflow.
+- Read-only requests stayed read-only.
+- The agent read only the relevant references and avoided loading unrelated long materials.
+- File edits used audit/extract/diagnose/revise/lint/apply/validate gates when applicable.
+- Long documents were processed by chapter, file, or segment range rather than blind full-document rewriting.
+- Evidence was preserved: script outputs, packet files, diffs, or line-specific findings support the final report.
+- Subagents, if used, had clear role, scope, allowed edits, protected constraints, and output contract.
+- Multiple revision subagents had disjoint write scopes.
+- Conflicts were resolved by protected-token safety, factual accuracy, citation integrity, and conservative claim strength before style.
+- Uncertain facts were marked as `needs_author_input` or reported to the user.
+- Final report distinguished checks run, checks skipped, changed files, residual risks, and author-review items.
+
+Fail conditions:
+
+- Treating detector evasion as the target.
+- Editing source files after a read-only request.
+- Applying revisions before packet lint or protected-token checks when those checks are available.
+- Merging subagent output that changes facts, citations, or claim strength without review.
+- Silently dropping unresolved conflicts.
+- Reporting "validated" without naming what was checked.
 
 ## Avoid
 
@@ -66,6 +101,7 @@ Use this when the user requests broader rewriting beyond sentence polishing.
 - Flattening all sentences into the same structure.
 - Adding data, examples, personal memories, or emotional claims not present in the source.
 - Using double negatives or synonym swaps in ways that reduce clarity.
+- Hidden Unicode, deliberate typos, or formatting tricks intended to alter detector behavior.
 
 ## Final Checklist
 
@@ -73,6 +109,8 @@ Use this when the user requests broader rewriting beyond sentence polishing.
 - All citations and labels remain unchanged.
 - Equations and inline math remain unchanged.
 - Chinese style findings from `chinese_ai_style_lint.py` were addressed or intentionally left.
+- Vague attribution and significance-inflation findings were addressed or flagged.
 - Paragraph, audience, quote, diagram, or personal-perspective requests followed their specific constraints.
 - No Markdown syntax was introduced into `.tex`.
+- No hidden Unicode or chatbot wrappers remain in revised prose.
 - The final answer names checks that were run.

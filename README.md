@@ -14,6 +14,8 @@ https://github.com/chi111i/BypassAIGC
 
 本仓库是在该思路启发下，将“学术文本润色 + 结构保护 + 可审计工作流”整理为面向 Codex / OpenAI Agents 使用的独立 Skill，重点增强 LaTeX 文档处理、提示词工程、分段修订包、protected token 校验和 Agent 标准工作流。
 
+后续又参考并蒸馏了一批开源学术写作、提示词管理和文本风格诊断项目，形成 [references/source-digests.md](references/source-digests.md)。这些资料只沉淀为通用方法论、检查清单和提示词结构，不复制外部项目代码，也不引入“保证绕过检测”的目标。
+
 说明：
 
 - 本项目不是原项目的官方子项目。
@@ -48,7 +50,9 @@ https://github.com/chi111i/BypassAIGC
 - **学术诚信边界**：不承诺检测结果，不鼓励规避检测，不编造参考文献。
 - **中英文支持**：内置中文、英文、摘要、相关工作、方法章节等提示词模板。
 - **中文 AI 腔诊断**：启发式标记空泛目标句、并列堆叠、抽象名词堆砌和论文套话。
+- **来源蒸馏工作流**：把开源提示词库、论文草稿工作流和风格诊断工具沉淀为“先诊断、再修订、后 QA”的可审计流程。
 - **结构与读者适配**：支持段落递进、读者层级、句式节奏、引用综述、流程图转换和个人视角边界提示。
+- **Agent / Subagents 协作**：支持只读审计、分章节修订、独立引用核查和 LaTeX 验证的多 Agent 工作流。
 - **保守正文抽取**：提供 `latex_segmenter.py` 从 `.tex` 中抽取可润色正文段。
 - **受保护 token 检查**：可比较修订前后引用、label、begin/end 等是否漂移。
 - **渐进式上下文**：核心规则在 `SKILL.md`，详细规则放在 `references/`，减少 Agent 上下文负担。
@@ -62,11 +66,14 @@ https://github.com/chi111i/BypassAIGC
 │   └── openai.yaml                  # OpenAI/Codex UI 元数据
 ├── references/
 │   ├── agent-workflow.md            # Agent 标准工作流和停止条件
+│   ├── agent-operating-procedure.md # 前/中/后执行编排规范
 │   ├── chinese-humanization.md      # 中文论文 AI 腔诊断与改写规则
 │   ├── latex-protection.md          # LaTeX 保护规则
 │   ├── prompt-engineering.md        # 提示词工程协议
 │   ├── quality-rubric.md            # 修订质量评分标准
-│   └── revision-prompts.md          # 学术润色提示词库
+│   ├── revision-prompts.md          # 学术润色提示词库
+│   ├── source-digests.md            # 外部开源项目/提示词蒸馏记录
+│   └── subagents-collaboration.md   # Subagents 角色、边界与交接契约
 ├── scripts/
 │   ├── apply_segment_revisions.py   # 将 approved revised_text 应用回 tex 文件
 │   ├── build_revision_pack.py       # 生成 JSON/Markdown 修订包
@@ -153,6 +160,30 @@ C:\Users\<你的用户名>\.codex\skills\latex-academic-revision
 
 ```text
 检查 revised.tex 是否误改了 citation key、label 或 LaTeX 环境。
+```
+
+## Agent / Subagents 协作模式
+
+复杂项目可以按 [references/agent-operating-procedure.md](references/agent-operating-procedure.md) 执行前/中/后流程：先判断任务类型和权限，再审计、抽取、诊断、修订、lint、应用和验证。涉及并行代理时，按 [references/subagents-collaboration.md](references/subagents-collaboration.md) 分配角色和范围。
+
+支持的典型模式：
+
+- **只读分析**：只审计项目、诊断风险、输出报告，不写文件。
+- **单 Agent 保守修订**：按 packet 分段改写，先 lint 再应用。
+- **多 Subagents 协作**：Project Auditor 找主文件和引用风险，Style Diagnoser 做中文 AI 腔诊断，Revision Agent 处理独立章节，Citation/Claim Auditor 和 LaTeX Validator 做后置检查。
+
+示例提示：
+
+```text
+使用 $latex-academic-revision 只读检查 thesis 项目，不要生成或修改文件，重点报告主文件、引用风险和中文 AI 腔高风险句。
+```
+
+```text
+使用 $latex-academic-revision 处理 main.tex：先让一个 agent 做中文 AI 腔诊断，另一个 agent 只处理 high severity 段落，最后由 validator 检查 protected token 和 claim drift。
+```
+
+```text
+使用 $latex-academic-revision 修订 chapters/intro.tex 和 chapters/related.tex。两个章节可以并行，但每个 subagent 只能处理自己的文件，引用和结论强度必须由主 agent 统一确认。
 ```
 
 ## Agent 标准工作流
@@ -247,6 +278,8 @@ python .\scripts\chinese_ai_style_lint.py .\revision_packet.json --min-severity 
 - 固定序列套话，如“首先、其次、最后”密集出现。
 - 正文中的元话语，如“毕业设计周期、毕业论文中、论文写作时”。
 - 无依据个人化表达，如“我观察到、对我而言、让我印象最深的是”。
+- 意义膨胀和无引用归因，如“具有重要意义”“研究表明”但没有证据锚点。
+- 对话式助手残留、隐藏 Unicode、英文模板词密度过高等可审计风险。
 
 这些结果是风格启发式检查，不是检测器预测。Agent 应把它当作修订优先级：先处理 high，再处理 medium；如果某个术语必须保留，可以在最终说明中注明。
 
@@ -376,6 +409,11 @@ OK: protected LaTeX command/reference token multiset is unchanged.
 
 - Segment JSON Prompt
 - Universal LaTeX Revision Prompt
+- Source-Grounded Academic Revision Prompt
+- Academic Clarity Audit Prompt
+- Citation And Claim Audit Prompt
+- Voice And Narrative QA Prompt
+- Prompt Optimization Loop Prompt
 - Chinese Academic Prose
 - Chinese Thesis Humanization Prompt
 - Chinese AI-Like Sentence Diagnosis Prompt

@@ -17,11 +17,19 @@ RISKY_PHRASES = [
     "undetectable",
     "bypass",
     "guarantee",
+    "detector score",
+    "human fingerprint",
     "检测率",
+    "ai率",
+    "降ai率",
     "绕过",
     "规避检测",
+    "不可检测",
+    "人类指纹",
     "保证通过",
 ]
+
+HIDDEN_UNICODE_RE = re.compile(r"[\u200b-\u200f\u202a-\u202e\u2060\ufeff\u00ad]")
 
 
 def load_packet(path: Path) -> Dict:
@@ -71,6 +79,9 @@ def lint_segment(segment: Dict, max_ratio: float, min_ratio: float) -> List[str]
 
     if "```" in revised:
         errors.append(f"ERROR segment {idx}: revised_text contains Markdown fence")
+
+    if HIDDEN_UNICODE_RE.search(revised):
+        errors.append(f"ERROR segment {idx}: revised_text contains hidden Unicode control characters")
 
     return errors + warnings
 

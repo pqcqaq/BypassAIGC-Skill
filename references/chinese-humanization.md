@@ -215,6 +215,61 @@ Rewrite direction:
 - In reflective writing, keep first-person only when the source or user provides the experience.
 - Never fabricate personal memories, emotions, debugging events, or field observations.
 
+### 12. Inflated Significance Without Scope
+
+Typical signals:
+
+- "具有重要意义", "起到关键作用", "提供重要支撑", "奠定坚实基础", "产生深远影响".
+- "显著提升" or "全面提升" appears without metrics, tests, logs, citations, or a bounded scenario.
+- English mixed into Chinese prose with broad terms such as "crucial", "robust", "seamless", "transformative", or "state-of-the-art" without a citation or precise comparison.
+
+Rewrite direction:
+
+- Keep the value claim only as far as the evidence supports it.
+- Anchor the value to a method step, module, test case, dataset, implementation constraint, or cited result.
+- If the source does not provide evidence, soften the claim or mark `needs_author_input`.
+
+### 13. Vague Attribution Without Citation
+
+Typical signals:
+
+- "研究表明", "相关研究指出", "已有研究认为", "大量研究显示", "实践表明".
+- The same sentence has no visible citation or source anchor.
+
+Rewrite direction:
+
+- Preserve or add only real citations supplied by the user or already present in the document.
+- If no citation exists, rewrite as a limited observation from the current work, or flag `uncited_attribution`.
+- Do not invent author names, years, DOI values, journal names, or database sources.
+
+### 14. Chatbot And Formatting Artifacts
+
+Typical signals:
+
+- "当然可以", "下面我将", "以下是对……的优化", "希望这能帮助", "如有需要".
+- Markdown code fences or assistant-style headings appear inside `.tex` prose.
+- Hidden Unicode such as zero-width characters, soft hyphens, or direction controls appears in text.
+
+Rewrite direction:
+
+- Remove conversational wrappers before editing content.
+- Keep only prose that belongs in the document.
+- Delete hidden Unicode characters instead of using them to alter detector behavior or visual appearance.
+
+### 15. Mechanical Rhythm And Excess Structure
+
+Typical signals:
+
+- Adjacent sentences have almost identical length and opening structure.
+- A simple paragraph is converted into many labels, bullets, or inline bold headings.
+- A paragraph repeatedly begins with "本文/本课题/本系统/该方案".
+
+Rewrite direction:
+
+- Vary rhythm by splitting overloaded sentences and merging trivial fragments.
+- Use lists only when the source actually contains parallel items.
+- Let concrete objects become subjects: modules, methods, datasets, logs, pages, endpoints, or test cases.
+
 ## Rewrite Rules
 
 Apply these rules in order:
@@ -228,6 +283,8 @@ Apply these rules in order:
 7. If paragraph restructuring is requested, map each paragraph to one core point before rewriting.
 8. Adapt vocabulary to the reader only when the target reader is known or requested.
 9. Do not add invented examples, experimental results, citations, personal experiences, or source-code facts.
+10. Remove chatbot wrappers, hidden Unicode, and Markdown artifacts from prose-bearing LaTeX segments.
+11. Treat uncited "研究表明" and similar phrases as citation risks, not as style-only issues.
 
 ## Preferred Chinese Style
 

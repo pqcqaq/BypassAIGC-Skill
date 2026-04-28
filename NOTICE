@@ -28,3 +28,16 @@ project's license terms.
 
 This repository's own code and documentation are distributed under the MIT
 License unless otherwise stated.
+
+Additional source-review notes
+==============================
+
+In 2026, this project also reviewed and distilled high-level workflow ideas
+from several open-source academic-writing, prompt-library, prompt-optimizer,
+and style-diagnostic projects. The reviewed sources and license notes are
+recorded in references/source-digests.md.
+
+These sources were used as methodology references only: staged revision,
+prompt organization, citation-oriented QA, style-pattern diagnostics, and
+prompt evaluation loops. This repository does not vendor their application
+code or reuse detector-evasion instructions.

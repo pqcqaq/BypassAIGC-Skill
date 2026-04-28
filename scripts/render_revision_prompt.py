@@ -54,6 +54,12 @@ def detect_mode(text: str, requested: str, section_hint: Dict | None = None) -> 
 
 
 def mode_guidance(mode: str, language: str) -> str:
+    if mode == "source-grounded":
+        return """- Treat the source passage as the only evidence base.
+- Preserve all claims, citations, terminology, numbers, and caveats unless the user supplied source material justifies a change.
+- Replace vague claims with bounded source-grounded wording; if a necessary detail is missing, mark it as `needs_author_input` in `risk_flags` instead of inventing it.
+- Check for vague attribution such as "studies show" or "research indicates"; keep it only when a citation or supplied source supports it.
+- Improve clarity, logic, and academic tone without inflating novelty or certainty."""
     if mode == "chinese-humanize":
         return """- Diagnose Chinese thesis prose before rewriting: empty objective chains, over-neat parallelism, abstract noun stacking, unsupported value claims, fixed "首先/其次/最后" transitions, boilerplate transitions, repeated "本文/本课题" subjects, and long overloaded sentences.
 - Make each sentence shorter, more concrete, and closer to author reasoning while preserving thesis tone.
@@ -187,6 +193,7 @@ def main() -> int:
             "universal",
             "chinese",
             "chinese-humanize",
+            "source-grounded",
             "english",
             "abstract",
             "introduction",

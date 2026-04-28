@@ -68,6 +68,139 @@ Text:
 {{TEXT}}
 ```
 
+## Source-Grounded Academic Revision Prompt
+
+Use this when a passage must stay tightly tied to supplied evidence, project facts, citations, logs, datasets, or source files.
+
+Task:
+- Improve clarity, specificity, and academic flow.
+- Keep every claim traceable to the source passage or supplied materials.
+- If a useful detail is missing, do not invent it; mark it as `needs_author_input`.
+
+Checks before rewriting:
+- Which claims depend on citations, data, source files, experiments, or project facts?
+- Are phrases such as "studies show", "research indicates", "研究表明", or "实践表明" backed by a visible citation or supplied evidence?
+- Are value claims scoped to a method, section, module, result, workflow, or documented limitation?
+
+Constraints:
+- Preserve LaTeX commands, citations, labels, equations, variables, numbers, names, and technical terms.
+- Do not add references, results, experiments, implementation details, or personal experience.
+- Do not inflate novelty, certainty, or importance.
+- Keep the original language and section voice.
+
+Return strict JSON:
+
+```json
+{
+  "revised_text": "revised passage",
+  "revision_note": "one sentence explaining the main improvement",
+  "risk_flags": []
+}
+```
+
+Use `needs_author_input`, `uncited_attribution`, `claim_scope`, or `citation_context` in `risk_flags` when relevant.
+
+Text:
+
+```latex
+{{TEXT}}
+```
+
+## Academic Clarity Audit Prompt
+
+Use this before rewriting when the user wants feedback or when the section is too broad to edit safely in one pass.
+
+Review the academic passage for:
+- sentence structure and readability;
+- precise word choice;
+- logical organization;
+- transitions between ideas;
+- redundancy and repeated openings;
+- terminology that needs explanation for the intended reader;
+- claim strength, citation dependence, and unsupported value statements.
+
+Return a compact table:
+
+| Issue | Location | Why It Matters | Revision Direction |
+| --- | --- | --- | --- |
+
+Do not rewrite the full passage unless asked.
+
+## Citation And Claim Audit Prompt
+
+Use this for literature reviews, related work, background, and any section with source-dependent claims.
+
+Task:
+- Identify every claim that needs a citation or source anchor.
+- Check whether the current sentence already contains a citation or explicit source.
+- Flag vague attribution, over-broad synthesis, and claims that sound stronger than the available evidence.
+- Suggest a safer wording direction without inventing bibliographic details.
+
+Output:
+
+```json
+{
+  "citation_risks": [
+    {
+      "claim": "claim text",
+      "risk": "uncited_attribution | overgeneralization | attribution_shift | unsupported_specificity",
+      "suggestion": "safer revision direction"
+    }
+  ]
+}
+```
+
+## Voice And Narrative QA Prompt
+
+Use this after revising multiple sections or chapters.
+
+Review the draft for:
+- consistent terminology across sections;
+- promises made in the introduction and whether later sections answer them;
+- contradictions between methods, results, and discussion;
+- voice consistency: tense, person, hedging, and level of formality;
+- paragraph handoff between adjacent sections;
+- unresolved placeholders, Markdown artifacts, or chatbot wrappers.
+
+Return:
+
+```json
+{
+  "narrative_issues": [],
+  "voice_issues": [],
+  "fact_or_citation_risks": [],
+  "recommended_next_edits": []
+}
+```
+
+## Prompt Optimization Loop Prompt
+
+Use this when improving prompts in this skill rather than revising prose directly.
+
+Inputs:
+- current prompt;
+- representative source passage;
+- model output;
+- observed failure or quality issue.
+
+Process:
+1. Identify which prompt layer failed: task frame, safety boundary, LaTeX boundary, revision objective, or output contract.
+2. Compare the output against the quality rubric.
+3. Add the smallest new constraint that prevents the failure.
+4. Remove vague style goals that cannot be checked.
+5. Keep placeholders explicit and reusable.
+
+Output:
+
+```json
+{
+  "diagnosis": "what failed",
+  "prompt_patch": "minimal prompt change",
+  "why_this_change": "how it addresses the failure",
+  "test_case": "short representative segment to retest"
+}
+```
+
 ## Chinese Academic Prose
 
 Revise the Chinese academic LaTeX passage below.

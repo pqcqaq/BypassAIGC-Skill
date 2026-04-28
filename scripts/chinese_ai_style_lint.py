@@ -34,6 +34,10 @@ ABSTRACT_NOUNS = [
     "分级",
     "重组",
     "保护",
+    "生态",
+    "矩阵",
+    "范式",
+    "赋能",
 ]
 
 GENERIC_VERBS = [
@@ -52,9 +56,43 @@ GENERIC_VERBS = [
     "优化",
     "沉淀",
     "复用",
+    "保障",
+    "赋能",
+]
+
+HIDDEN_UNICODE_RE = re.compile(r"[\u200b-\u200f\u202a-\u202e\u2060\ufeff\u00ad]")
+VAGUE_ATTRIBUTION_RE = re.compile(
+    r"(?:研究表明|相关研究表明|已有研究指出|已有研究认为|大量研究显示|学者普遍认为|实践表明|业界普遍认为)"
+)
+CITATION_RE = re.compile(
+    r"\\(?:cite|citep|citet|autocite|parencite|textcite)\b|"
+    r"\[[0-9,\-\s]+\]|"
+    r"（[^）]*(?:\d{4}|等)[^）]*）"
+)
+ENGLISH_AI_TERMS = [
+    "comprehensive",
+    "robust",
+    "seamless",
+    "crucial",
+    "pivotal",
+    "transformative",
+    "state-of-the-art",
+    "plays a key role",
+    "plays a crucial role",
+    "it is worth noting",
+    "in today's",
+    "delve into",
+    "landscape",
 ]
 
 PHRASE_RULES: Sequence[Tuple[str, str, str, str, str]] = [
+    (
+        "significance-inflation",
+        "medium",
+        r"(?:具有重要意义|起到关键作用|提供重要支撑|奠定坚实基础|产生深远影响|显著提升|全面提升|有效提升|有力保障)",
+        "价值或意义被抬得过高，但缺少对应证据、范围或场景。",
+        "把意义限定到本文材料能支撑的范围，说明是在什么章节、模块、实验或流程中体现。",
+    ),
     (
         "generic-value-claim",
         "high",
@@ -103,6 +141,13 @@ PHRASE_RULES: Sequence[Tuple[str, str, str, str, str]] = [
         r"(?:我观察到|对我而言|让我印象最深的是|记得那年|我感到|我认为)",
         "个人视角或情感表达需要场景和材料支撑，正式论文正文中容易突兀。",
         "仅在反思、总结、致谢或非正式文本中保留；技术正文改为可核对的观察或判断。",
+    ),
+    (
+        "chatbot-artifact",
+        "medium",
+        r"(?:希望这能帮助|如有需要.*(?:继续|进一步)|欢迎继续|当然可以|下面我将|以下是对.*的优化)",
+        "残留对话式助手痕迹，不适合放入正式论文正文。",
+        "删除对话包装，只保留论文正文需要表达的内容。",
     ),
     (
         "chain-target-template",
@@ -203,6 +248,22 @@ def lint_sentence(
     segment_index: int | None,
 ) -> None:
     stripped = sentence.strip()
+    if HIDDEN_UNICODE_RE.search(stripped):
+        add_finding(
+            findings,
+            source=source,
+            base_text=base_text,
+            base_offset=base_offset,
+            sentence_start=sentence_start,
+            sentence_end=sentence_end,
+            severity="high",
+            rule="hidden-unicode",
+            message="文本包含零宽字符、软连字符或方向控制字符，可能造成审阅、复制或编译异常。",
+            sentence=stripped,
+            suggestion="删除隐藏 Unicode 字符，保留正常可见文本。",
+            segment_index=segment_index,
+        )
+
     for rule, severity, pattern, message, suggestion in PHRASE_RULES:
         if re.search(pattern, stripped):
             add_finding(
@@ -219,6 +280,40 @@ def lint_sentence(
                 suggestion=suggestion,
                 segment_index=segment_index,
             )
+
+    if VAGUE_ATTRIBUTION_RE.search(stripped) and not CITATION_RE.search(stripped):
+        add_finding(
+            findings,
+            source=source,
+            base_text=base_text,
+            base_offset=base_offset,
+            sentence_start=sentence_start,
+            sentence_end=sentence_end,
+            severity="high",
+            rule="vague-attribution-without-citation",
+            message="使用了“研究表明/已有研究指出”一类归因，但句内没有可见引用。",
+            sentence=stripped,
+            suggestion="补上真实引用，或改成本文材料能直接支持的表述。",
+            segment_index=segment_index,
+        )
+
+    lowered = stripped.lower()
+    english_hits = sum(1 for term in ENGLISH_AI_TERMS if term in lowered)
+    if english_hits >= 2:
+        add_finding(
+            findings,
+            source=source,
+            base_text=base_text,
+            base_offset=base_offset,
+            sentence_start=sentence_start,
+            sentence_end=sentence_end,
+            severity="medium",
+            rule="english-ai-phrase-density",
+            message="英文模板词或常见 AI 腔短语密度较高。",
+            sentence=stripped,
+            suggestion="保留必要术语，删掉泛化形容词，并用具体方法、指标或限制替代。",
+            segment_index=segment_index,
+        )
 
     zh_len = chinese_count(stripped)
     separator_count = stripped.count("、") + stripped.count("，") + stripped.count(",")

@@ -40,6 +40,13 @@ Always include:
 - Explicit instruction not to add citations, data, or claims.
 - Output schema.
 
+For source-grounded revision, also include:
+
+- Supplied evidence boundaries: what material may be used as support.
+- Claim audit instruction: flag uncited or over-broad claims before rewriting.
+- Missing-detail behavior: use `needs_author_input` instead of inventing.
+- QA instruction: check citation context, terminology consistency, and hidden Unicode after rewriting.
+
 For `chinese-humanize`, also include:
 
 - Findings from `scripts/chinese_ai_style_lint.py` when available.
@@ -50,6 +57,11 @@ For `chinese-humanize`, also include:
 
 When the user requests structure, audience, scene, quote, or diagram work, include only the relevant optional module from `references/revision-prompts.md`:
 
+- `Source-Grounded Academic Revision Prompt`: source-tied polishing, citation-dependent claims, or project-fact-based thesis prose.
+- `Academic Clarity Audit Prompt`: diagnosis before rewriting, especially for broad or ambiguous passages.
+- `Citation And Claim Audit Prompt`: literature review, related work, background, or claim-heavy sections.
+- `Voice And Narrative QA Prompt`: multiple revised sections that need consistency checking.
+- `Prompt Optimization Loop Prompt`: improving this skill's prompts after observing model-output failures.
 - `Paragraph Structure And Coherence Prompt`: paragraph reordering, progression, opening/ending handoff.
 - `Audience And Scenario Style Prompt`: general-reader, expert-reader, formal, persuasive, or informal style.
 - `Sentence Rhythm And Complexity Prompt`: long-sentence splitting, rhythm variation, active/passive or clause restructuring.
@@ -57,6 +69,39 @@ When the user requests structure, audience, scene, quote, or diagram work, inclu
 - `Quote Paraphrase And Synthesis Prompt`: direct quote to indirect quote or synthesis while preserving attribution.
 - `Flowchart Conversion Prompt`: steps, procedures, decision points, and process diagrams.
 - `Personal Perspective Boundary Prompt`: first-person or warmer tone only when appropriate and source-grounded.
+
+## Subagent Prompt Contracts
+
+When prompting subagents, keep prompts narrow and machine-checkable. For full role definitions and schemas, read `references/subagents-collaboration.md`.
+
+Every subagent prompt should contain:
+
+- `Task`: one concrete result.
+- `Scope`: exact files, chapter names, or packet segment indices.
+- `Allowed edits`: `read-only`, `revision_packet fields only`, or exact write ownership.
+- `Protected constraints`: citations, labels, refs, math, commands, numbers, proper nouns, language, paragraph count, claim strength.
+- `References to read`: only the files needed for that role.
+- `Checks to run`: scripts or manual comparisons expected.
+- `Output format`: audit JSON, revision JSON, validation JSON, or changed file list.
+- `Coordination note`: other agents may be working; do not revert unrelated changes.
+
+Role-specific prohibitions:
+
+- Project auditors and style diagnosers must not rewrite prose.
+- Revision agents must not touch packet metadata, protected tokens, or out-of-scope files.
+- Citation/claim auditors must not invent citations or repair bibliography entries.
+- Validators must not rewrite prose to hide validation failures.
+- Report agents must not omit unresolved risks.
+
+Subagent outputs should be structured. Avoid long natural-language responses mixed into fields that may be applied back to a packet.
+
+Before integrating subagent output, run this merge self-check:
+
+1. Is the output traceable to the assigned file or segment?
+2. Did any citation, label, ref, equation, command, number, proper noun, or language change?
+3. Did the subagent add facts, data, examples, citations, or personal experience?
+4. Does the output stay inside the assigned scope?
+5. Are all uncertainty flags preserved for the Lead Agent?
 
 ## Output Schemas
 
@@ -112,6 +157,8 @@ After drafting a revision, run this mental checklist:
 6. If audience/style was requested, is the style consistent across the passage?
 7. If expansion was requested, is every added detail grounded in the source or marked for author input?
 8. If personal perspective was requested, is it appropriate for the section and supported by source material?
+9. Is vague attribution either cited or rewritten?
+10. Did the revision avoid hidden Unicode, Markdown wrappers, and chatbot artifacts?
 
 If any answer is unsafe, revise again before returning.
 
